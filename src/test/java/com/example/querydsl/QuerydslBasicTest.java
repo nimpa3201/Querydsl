@@ -48,7 +48,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void startJPQL(){
+    public void startJPQL() {
         // member1을 찾아라
         Member findMember = em.createQuery("select  m from Member  m where m.username =:username", Member.class)
             .setParameter("username", "member1")
@@ -59,7 +59,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void startQuerydsl(){
+    public void startQuerydsl() {
 
         Member findMember = queryFactory
             .select(member)
@@ -70,23 +70,22 @@ public class QuerydslBasicTest {
         assertThat(findMember.getUsername()).isEqualTo("member1");
 
 
-
     }
 
     @Test
-    public void search(){
+    public void search() {
         Member findMember = queryFactory
             .selectFrom(member)
             .where(member.username.eq("member1")
                 .and(member.age.eq(10)))
-                .fetchOne();
+            .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo("member1");
 
     }
 
     @Test
-    public void searchAndParam(){
+    public void searchAndParam() {
         Member findMember = queryFactory
             .selectFrom(member)
             .where(member.username.eq("member1"),
@@ -96,8 +95,9 @@ public class QuerydslBasicTest {
         assertThat(findMember.getUsername()).isEqualTo("member1");
 
     }
+
     @Test
-    public void resultFetch(){
+    public void resultFetch() {
         List<Member> fetch = queryFactory
             .selectFrom(member)
             .fetch();
@@ -130,10 +130,10 @@ public class QuerydslBasicTest {
      * 단 2에서 회원 이름이 없으면 마지막에 출력(nulls last)
      */
     @Test
-    public void sort(){
-        em.persist(new Member(null,100));
-        em.persist(new Member("member5",100));
-        em.persist(new Member("member6",100));
+    public void sort() {
+        em.persist(new Member(null, 100));
+        em.persist(new Member("member5", 100));
+        em.persist(new Member("member6", 100));
 
         List<Member> result = queryFactory
             .selectFrom(member)
@@ -150,11 +150,35 @@ public class QuerydslBasicTest {
         assertThat(memberNull.getUsername()).isNull();
 
 
+    }
+
+    @Test
+    public void paging1(){
+        List<Member> result = queryFactory
+            .selectFrom(member)
+            .orderBy(member.username.desc())
+            .offset(1)
+            .limit(2)
+            .fetch();
+        assertThat(result.size()).isEqualTo(2);
+    }
 
 
-
+    @Test
+    public void paging2(){
+        QueryResults<Member> results = queryFactory
+            .selectFrom(member)
+            .orderBy(member.username.desc())
+            .offset(1)
+            .limit(2)
+            .fetchResults();
+        assertThat(results.getTotal()).isEqualTo(4);
+        assertThat(results.getLimit()).isEqualTo(2);
+        assertThat(results.getOffset()).isEqualTo(1);
+        assertThat(results.getResults().size()).isEqualTo(2);
 
 
     }
+
 
 }
