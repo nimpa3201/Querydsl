@@ -29,6 +29,10 @@ public class Member {
         }
     }
 
+    public Member(String username) {
+        this.username = username;
+    }
+
     public Member(String username, int age) {
         this.username = username;
         this.age = age;
