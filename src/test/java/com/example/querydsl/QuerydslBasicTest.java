@@ -1,12 +1,17 @@
 package com.example.querydsl;
 
+import com.example.querydsl.dto.MemberDto;
+import com.example.querydsl.dto.UserDto;
 import com.example.querydsl.entity.Member;
 import com.example.querydsl.entity.QMember;
 import com.example.querydsl.entity.Team;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -189,7 +194,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void aggregation(){
+    public void aggregation() {
         List<Tuple> result = queryFactory
             .select(member.count(),
                 member.age.sum(),
@@ -213,7 +218,7 @@ public class QuerydslBasicTest {
      * 팀의 이름과 각 팀의 평균 연령을 구해라
      */
     @Test
-    public void group() throws Exception{
+    public void group() throws Exception {
         List<Tuple> result = queryFactory
             .select(team.name, member.age.avg())
             .from(member)
@@ -231,8 +236,9 @@ public class QuerydslBasicTest {
         assertThat(teamB.get(member.age.avg())).isEqualTo(35);
 
     }
+
     @Test
-    public void join(){
+    public void join() {
         List<Member> result = queryFactory
             .selectFrom(member)
             .join(member.team, team)
@@ -240,14 +246,15 @@ public class QuerydslBasicTest {
             .fetch();
         assertThat(result)
             .extracting("username")
-            .containsExactly("member1","member2");
+            .containsExactly("member1", "member2");
     }
+
     /**
      * 세타 조인
      * 회원의 이름이 팀 이름과 같은 회원 조회
      */
     @Test
-    public void theta_join(){
+    public void theta_join() {
         em.persist(new Member("teamA"));
         em.persist(new Member("teamB"));
         em.persist(new Member("teamC"));
@@ -260,7 +267,7 @@ public class QuerydslBasicTest {
 
         assertThat(result)
             .extracting("username")
-            .containsExactly("teamA","teamB");
+            .containsExactly("teamA", "teamB");
     }
 
 
@@ -270,7 +277,7 @@ public class QuerydslBasicTest {
      */
 
     @Test
-    public void join_on_filtering(){
+    public void join_on_filtering() {
 
         List<Tuple> result = queryFactory
             .select(member, team)
@@ -293,13 +300,13 @@ public class QuerydslBasicTest {
      */
 
     @Test
-    public void join_on_no_relation(){
+    public void join_on_no_relation() {
         em.persist(new Member("teamA"));
         em.persist(new Member("teamB"));
         em.persist(new Member("teamC"));
 
         List<Tuple> result = queryFactory
-            .select(member,team)
+            .select(member, team)
             .from(member)
             .leftJoin(team).on(member.username.eq(team.name))
             .fetch();
@@ -315,8 +322,9 @@ public class QuerydslBasicTest {
 
     @PersistenceUnit
     EntityManagerFactory emf;
+
     @Test
-    public void fetchJoinNo(){
+    public void fetchJoinNo() {
         em.flush();
         em.clear();
 
@@ -332,13 +340,13 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void fetchJoinUse(){
+    public void fetchJoinUse() {
         em.flush();
         em.clear();
 
         Member findMember = queryFactory
             .selectFrom(member)
-            .join(member.team,team).fetchJoin()
+            .join(member.team, team).fetchJoin()
             .where(member.username.eq("member1"))
             .fetchOne();
 
@@ -353,7 +361,7 @@ public class QuerydslBasicTest {
      */
 
     @Test
-    public void subQuery(){
+    public void subQuery() {
 
         QMember memberSub = new QMember("memberSub");
 
@@ -374,7 +382,7 @@ public class QuerydslBasicTest {
      */
 
     @Test
-    public void subQueryGoe(){
+    public void subQueryGoe() {
         QMember memberSub = new QMember("memberSub");
 
         List<Member> result = queryFactory
@@ -386,11 +394,11 @@ public class QuerydslBasicTest {
             .fetch();
 
         assertThat(result).extracting("age")
-            .containsExactly(30,40);
+            .containsExactly(30, 40);
     }
 
     @Test
-    public void subQueryIn(){
+    public void subQueryIn() {
         QMember memberSub = new QMember("memberSub");
 
         List<Member> result = queryFactory
@@ -403,11 +411,11 @@ public class QuerydslBasicTest {
             .fetch();
 
         assertThat(result).extracting("age")
-            .containsExactly(20,30,40);
+            .containsExactly(20, 30, 40);
     }
 
     @Test
-    public void selectSubQuery(){
+    public void selectSubQuery() {
         QMember memberSub = new QMember("memberSub");
         List<Tuple> result = queryFactory
             .select(member.username,
@@ -421,7 +429,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void basicCase(){
+    public void basicCase() {
         List<String> result = queryFactory
             .select(member.age
                 .when(10).then("열살")
@@ -435,7 +443,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void complexCase(){
+    public void complexCase() {
         List<String> result = queryFactory
             .select(new CaseBuilder()
                 .when(member.age.between(0, 20)).then("0~20살")
@@ -450,7 +458,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void constant(){
+    public void constant() {
         List<Tuple> result = queryFactory
             .select(member.username, Expressions.constant("A"))
             .from(member)
@@ -461,7 +469,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void concat(){
+    public void concat() {
         //{username}_{age}
         List<String> result = queryFactory
             .select(member.username.concat("_").concat(member.age.stringValue()))
@@ -485,7 +493,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void tupleProjection(){
+    public void tupleProjection() {
         List<Tuple> result = queryFactory
             .select(member.username, member.age)
             .from(member)
@@ -498,12 +506,78 @@ public class QuerydslBasicTest {
             System.out.println("age = " + age);
         }
 
-
     }
 
+    @Test
+    public void findDtoByJPQL() {
+        List<MemberDto> result = em.createQuery("select  new com.example.querydsl.dto.MemberDto(m.username,m.age) from Member m ", MemberDto.class)
+            .getResultList();
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+        // 순수 JPA에서 DTO를 조회할 떄는 new명령어를 사용해야함
+        // DTO의 package이름을 다 적어줘야해서 지저분함
+        // 생성자 방식만 지원
+    }
 
+    @Test
+    public void findDtoBySetter() {
+        List<MemberDto> result = queryFactory
+            .select(Projections.bean(MemberDto.class,
+                member.username,
+                member.age))
+            .from(member)
+            .fetch();
 
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
 
+    @Test
+    public void findDtoByField() {
+        List<MemberDto> result = queryFactory
+            .select(Projections.fields(MemberDto.class,
+                member.username,
+                member.age))
+            .from(member)
+            .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
+
+    @Test
+    public void findDtoByConstruct() {
+        List<MemberDto> result = queryFactory
+            .select(Projections.constructor(MemberDto.class,
+                member.username,
+                member.age))
+            .from(member)
+            .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
+
+    @Test
+    public void findUserDto() {
+        QMember memberSub = new QMember("memberSub");
+        List<UserDto> result = queryFactory
+            .select(Projections.fields(UserDto.class,
+                member.username.as("name"),
+                ExpressionUtils.as(JPAExpressions
+                    .select(memberSub.age.max())
+                    .from(memberSub), "age")
+            ))
+            .from(member)
+            .fetch();
+        for (UserDto userDto : result) {
+            System.out.println("userDto = " + userDto);
+        }
+    }
 
 
 }
