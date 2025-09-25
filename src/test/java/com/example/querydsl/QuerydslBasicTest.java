@@ -5,6 +5,8 @@ import com.example.querydsl.entity.QMember;
 import com.example.querydsl.entity.Team;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -416,6 +418,36 @@ public class QuerydslBasicTest {
             System.out.println("tuple = " + tuple);
         }
     }
+
+    @Test
+    public void basicCase(){
+        List<String> result = queryFactory
+            .select(member.age
+                .when(10).then("열살")
+                .when(20).then("스무살")
+                .otherwise("기타"))
+            .from(member)
+            .fetch();
+        for (String string : result) {
+            System.out.println("string = " + string);
+        }
+    }
+
+    @Test
+    public void complexCase(){
+        List<String> result = queryFactory
+            .select(new CaseBuilder()
+                .when(member.age.between(0, 20)).then("0~20살")
+                .when(member.age.between(21, 30)).then("21~30")
+                .otherwise("기타"))
+            .from(member)
+            .fetch();
+
+        for (String string : result) {
+            System.out.println("string = " + string);
+        }
+    }
+
 
 
 
