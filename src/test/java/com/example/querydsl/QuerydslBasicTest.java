@@ -1,6 +1,7 @@
 package com.example.querydsl;
 
 import com.example.querydsl.dto.MemberDto;
+import com.example.querydsl.dto.QMemberDto;
 import com.example.querydsl.dto.UserDto;
 import com.example.querydsl.entity.Member;
 import com.example.querydsl.entity.QMember;
@@ -12,7 +13,6 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -577,6 +577,18 @@ public class QuerydslBasicTest {
         for (UserDto userDto : result) {
             System.out.println("userDto = " + userDto);
         }
+    }
+
+    @Test
+    public void findDtoByQueryProjection() {
+        List<MemberDto> result = queryFactory
+            .select(new QMemberDto(member.username, member.age))
+            .from(member)
+            .fetch();
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+
     }
 
 
