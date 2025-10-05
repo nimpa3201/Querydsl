@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -643,6 +644,54 @@ public class QuerydslBasicTest {
     private BooleanExpression ageEq(Integer ageCond) {
         return ageCond == null ? null : member.age.eq(ageCond);
     }
+
+    @Test
+    @Commit
+    public void bulkUpdate(){
+        //member1 =10 -> 비회원
+        //member2 =20 -> 비회원
+        //member3 =30 -> 유지
+        //member4 =40 -> 유지
+        long count = queryFactory
+            .update(member)
+            .set(member.username, "비회원")
+            .where(member.age.lt(28))
+            .execute();
+
+        em.flush();
+        em.clear(); // 영속성 컨텍스트 초기
+
+        List<Member> result = queryFactory
+            .selectFrom(member)
+            .fetch();
+        for (Member member1 : result) {
+            System.out.println("member1 = " + member1);
+            /** 영속성 컨텍스트 초기화 하지 않으면
+             * member1 = Member(id=1, username=member1, age=10)
+             * member1 = Member(id=2, username=member2, age=20)
+             * member1 = Member(id=3, username=member3, age=30)
+             * member1 = Member(id=4, username=member4, age=40)
+             */
+        }
+    }
+
+    @Test
+    public void bulkAdd(){
+        long count = queryFactory
+            .update(member)
+            .set(member.age, member.age.add(1))
+            .execute();
+    }
+
+    @Test
+    public void bulkDelete(){
+        long count = queryFactory
+            .delete(member)
+            .where(member.age.gt(18))
+            .execute();
+    }
+
+
 
 
 }
